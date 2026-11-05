@@ -408,11 +408,8 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
 .ol-bl { display: block; margin-top: 2px; color: var(--muted); font-size: var(--fs-sm); line-height: 1.45; }
 .ol li.target > .row .ol-bl { color: inherit; }
 .panel-note { margin: -6px 0 10px; font-size: var(--fs-sm); color: var(--muted); }
-.sn-links a { grid-template-columns: auto minmax(0, 1fr) auto; }
-.sn-links { margin-bottom: 8px; }
-.sn-sec { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; font: 700 var(--fs-sm)/1.4 var(--font-body); letter-spacing: 0.02em; color: var(--muted); }
-.sn-sec a { color: inherit; text-decoration: none; }
-.sn-sec a:hover { text-decoration: underline; }
+.sn-new { margin: 0 0 6px; font-size: var(--fs-ui); }
+.sn-new .mk { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--muted); }
 .sn-bar { height: 6px; margin: -4px 0 12px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
 .sn-bar span { display: block; height: 100%; border-radius: inherit; background: var(--o2); }
 .res-snip { margin-top: 6px; font-size: var(--fs-sm); line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
@@ -629,35 +626,25 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
       (s.d ? '<span class="badge b-draft">Draft</span>' : "") + (when ? '<span class="sn-meta">Updated ' + esc(when) + "</span>" : "") + "</div>" +
       '<div class="sn-body">' + s.h + "</div></section>";
   }
+  /* home: one progress card; the section lists below already tag written topics, so no second list here */
   function snPanel() {
-    var groups = new Map(), total = 0, all = 0, draft = false;
+    var total = 0, all = 0, draft = false, newest = null;
     nodes.forEach(function (n) {
-      if (!visiblePart(n.part)) return;
-      if (n.depth === 0) return;
+      if (!visiblePart(n.part) || n.depth === 0) return;
       all++;
       if (n.sn && n.sn.d) draft = true;
-      if (!n.cov) return;
-      total++;
-      if (n.depth < 2) return;
-      var g = ancestorAt(n, 2);
-      groups.set(g, (groups.get(g) || 0) + 1);
+      if (n.sn && n.depth <= 3 && (!newest || (n.sn.u || "") > (newest.sn.u || "") || ((n.sn.u || "") === (newest.sn.u || "") && n.idx > newest.idx))) newest = n;
+      if (n.cov) total++;
     });
-    if (!groups.size) return "";
-    var pct = Math.max(1, Math.round(100 * total / all)), html = "", head = null;
-    Array.from(groups.keys()).sort(function (a, b) { return a.idx - b.idx; }).forEach(function (g) {
-      var sec = g.depth >= 1 ? ancestorAt(g, 1) : g;
-      if (sec !== head) {
-        html += (head ? "</ul>" : "") + '<h3 class="sn-sec">' + badge(sec) + '<a href="#' + sec.slug + '">' + esc(label(sec)) + '</a></h3><ul class="links sn-links">';
-        head = sec;
-      }
-      html += '<li><a href="#' + g.slug + '"><span class="mk">' + esc(g.code) + "</span><span>" + esc(short(g.t, 70)) + '</span><span class="n">' + (groups.get(g) === g.size ? "All " + g.size + " written" : groups.get(g) + " of " + g.size + " written") + "</span></a></li>";
-    });
-    return '<section class="panel sn-panel" aria-labelledby="snp-h"><div class="panel-head"><h2 id="snp-h">Study guide: written so far</h2><span class="n">' + total.toLocaleString() + " of " + plural(all, "topic", "topics") + "</span></div>" +
+    if (!total) return "";
+    var pct = Math.max(1, Math.round(100 * total / all));
+    return '<section class="panel sn-panel" aria-labelledby="snp-h"><div class="panel-head"><h2 id="snp-h">Study guide progress</h2><span class="n">' + total.toLocaleString() + " of " + plural(all, "topic", "topics") + " written</span></div>" +
       '<div class="sn-bar" role="img" aria-label="' + pct + '% of topics written"><span style="width:' + pct + '%"></span></div>' +
       '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study guide pages only after they’re approved." :
-        "Reading pages written for this guide, added a section at a time. Open a section to start; written topics carry a <span class=\"pill\">Study guide</span> tag in every list." +
-        " Your own notes are separate, under <a href=\"#my-notes\">My notes</a>." + (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
-      html + "</ul></section>";
+        "Reading pages are being written for every topic, a section at a time. In the lists below, a <span class=\"pill\">Study guide</span> tag marks a topic that has one." +
+        (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
+      (newest ? '<p class="sn-new">Latest added: <a href="#' + newest.slug + '"><span class="mk">' + esc(newest.code) + "</span> " + esc(short(newest.t, 70)) + "</a></p>" : "") +
+      "</section>";
   }
 
   var $ = function (s) { return document.querySelector(s); };
