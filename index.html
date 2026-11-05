@@ -631,7 +631,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
     });
     if (!groups.size) return "";
     return '<section class="panel"><div class="panel-head"><h2>Study notes</h2><span class="n">' + plural(total, "topic", "topics") + "</span></div>" +
-      '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study notes only after they’re approved." : "Written for this guide and reviewed by your attending. Look for the Notes tag in any topic list.") + "</p>" +
+      '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study notes only after they’re approved." : "Written for this guide. Look for the Notes tag in any topic list." + (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
       '<ul class="links sn-links">' + Array.from(groups.keys()).sort(function (a, b) { return a.idx - b.idx; }).map(function (g) {
         return '<li><a href="#' + g.slug + '"><span class="mk">' + esc(g.code) + "</span><span>" + esc(g.t) + '</span><span class="n">' + groups.get(g) + "</span></a></li>";
       }).join("") + "</ul></section>";
