@@ -409,6 +409,12 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
 .ol li.target > .row .ol-bl { color: inherit; }
 .panel-note { margin: -6px 0 10px; font-size: var(--fs-sm); color: var(--muted); }
 .sn-links a { grid-template-columns: auto minmax(0, 1fr) auto; }
+.sn-links { margin-bottom: 8px; }
+.sn-sec { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; font: 700 var(--fs-sm)/1.4 var(--font-body); letter-spacing: 0.02em; color: var(--muted); }
+.sn-sec a { color: inherit; text-decoration: none; }
+.sn-sec a:hover { text-decoration: underline; }
+.sn-bar { height: 6px; margin: -4px 0 12px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
+.sn-bar span { display: block; height: 100%; border-radius: inherit; background: var(--o2); }
 .res-snip { margin-top: 6px; font-size: var(--fs-sm); line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
 
 /* ---------- phones and narrow windows ---------- */
@@ -584,7 +590,9 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
   try { NOTES = JSON.parse(document.getElementById("notes-data").textContent) || {}; } catch (e) { NOTES = {}; }
   nodes.forEach(function (n) { var s = NOTES[n.code]; if (s && typeof s.h === "string") n.sn = s; });
   (function countNotes(list) {
-    list.forEach(function (n) { countNotes(n.kids); n.snCount = (n.sn ? 1 : 0) + n.kids.reduce(function (s, k) { return s + k.snCount; }, 0); });
+    list.forEach(function (n) { countNotes(n.kids); n.snCount = (n.sn ? 1 : 0) + n.kids.reduce(function (s, k) { return s + k.snCount; }, 0); n.size = 1 + n.kids.reduce(function (s, k) { return s + k.size; }, 0);
+      /* a heading counts as written when it has notes, or when every item under it is written */
+      n.cov = !!n.sn || (n.kids.length > 0 && n.kids.every(function (k) { return k.cov; })); });
   })(tree);
   /* items below a subtopic get their own page only when they have study notes */
   function hasPage(n) { return n.depth <= 3 || !!n.sn; }
@@ -617,24 +625,39 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
   }
   function snSection(n) {
     var s = n.sn, when = longDate(s.u);
-    return '<section class="sn' + (n.exam === "ADVANCED" ? " adv" : "") + '" aria-labelledby="sn-h"><div class="sn-head"><h2 id="sn-h">Study notes</h2>' +
+    return '<section class="sn' + (n.exam === "ADVANCED" ? " adv" : "") + '" aria-labelledby="sn-h"><div class="sn-head"><h2 id="sn-h">Study guide</h2>' +
       (s.d ? '<span class="badge b-draft">Draft</span>' : "") + (when ? '<span class="sn-meta">Updated ' + esc(when) + "</span>" : "") + "</div>" +
       '<div class="sn-body">' + s.h + "</div></section>";
   }
   function snPanel() {
-    var groups = new Map(), total = 0, draft = false;
+    var groups = new Map(), total = 0, all = 0, draft = false;
     nodes.forEach(function (n) {
-      if (!n.sn || !visiblePart(n.part)) return;
-      if (n.sn.d) draft = true;
-      var g = n.depth <= 3 ? n : ancestorAt(n, 3);
-      groups.set(g, (groups.get(g) || 0) + 1); total++;
+      if (!visiblePart(n.part)) return;
+      if (n.depth === 0) return;
+      all++;
+      if (n.sn && n.sn.d) draft = true;
+      if (!n.cov) return;
+      total++;
+      if (n.depth < 2) return;
+      var g = ancestorAt(n, 2);
+      groups.set(g, (groups.get(g) || 0) + 1);
     });
     if (!groups.size) return "";
-    return '<section class="panel"><div class="panel-head"><h2>Study notes</h2><span class="n">' + plural(total, "topic", "topics") + "</span></div>" +
-      '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study notes only after they’re approved." : "Written for this guide. Look for the Notes tag in any topic list." + (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
-      '<ul class="links sn-links">' + Array.from(groups.keys()).sort(function (a, b) { return a.idx - b.idx; }).map(function (g) {
-        return '<li><a href="#' + g.slug + '"><span class="mk">' + esc(g.code) + "</span><span>" + esc(g.t) + '</span><span class="n">' + groups.get(g) + "</span></a></li>";
-      }).join("") + "</ul></section>";
+    var pct = Math.max(1, Math.round(100 * total / all)), html = "", head = null;
+    Array.from(groups.keys()).sort(function (a, b) { return a.idx - b.idx; }).forEach(function (g) {
+      var sec = g.depth >= 1 ? ancestorAt(g, 1) : g;
+      if (sec !== head) {
+        html += (head ? "</ul>" : "") + '<h3 class="sn-sec">' + badge(sec) + '<a href="#' + sec.slug + '">' + esc(label(sec)) + '</a></h3><ul class="links sn-links">';
+        head = sec;
+      }
+      html += '<li><a href="#' + g.slug + '"><span class="mk">' + esc(g.code) + "</span><span>" + esc(short(g.t, 70)) + '</span><span class="n">' + (groups.get(g) === g.size ? "All " + g.size + " written" : groups.get(g) + " of " + g.size + " written") + "</span></a></li>";
+    });
+    return '<section class="panel sn-panel" aria-labelledby="snp-h"><div class="panel-head"><h2 id="snp-h">Study guide: written so far</h2><span class="n">' + total.toLocaleString() + " of " + plural(all, "topic", "topics") + "</span></div>" +
+      '<div class="sn-bar" role="img" aria-label="' + pct + '% of topics written"><span style="width:' + pct + '%"></span></div>' +
+      '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study guide pages only after they’re approved." :
+        "Reading pages written for this guide, added a section at a time. Open a section to start; written topics carry a <span class=\"pill\">Study guide</span> tag in every list." +
+        " Your own notes are separate, under <a href=\"#my-notes\">My notes</a>." + (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
+      html + "</ul></section>";
   }
 
   var $ = function (s) { return document.querySelector(s); };
@@ -746,7 +769,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
       (n.depth && s[1] ? '<p class="lead">' + esc(s[1]) + "</p>" : "") +
       (facts && facts.length ? '<ul class="facts">' + facts.map(function (f) { return "<li>" + f + "</li>"; }).join("") + "</ul>" : "");
   }
-  function pill(n) { return '<span class="pill' + (n.exam === "ADVANCED" ? " adv" : "") + '">Notes</span>'; }
+  function pill(n) { return '<span class="pill' + (n.exam === "ADVANCED" ? " adv" : "") + '">Study guide</span>'; }
   function outline(kids) {
     if (!kids.length) return "";
     return '<ul class="ol">' + kids.map(function (k) {
@@ -879,7 +902,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
       '<ol class="results">' + list.map(function (h) {
         var n = h.n, chain = [];
         for (var a = n.parent; a; a = a.parent) chain.unshift(a);
-        return '<li><a class="res" href="#' + n.slug + '"><div class="res-top">' + badge(n) + '<span class="code">' + esc(n.code) + '</span><span class="code">p. ' + n.p + "</span>" + (h.notes ? '<span class="pill' + (n.exam === "ADVANCED" ? " adv" : "") + '">In study notes</span>' : "") + "</div>" +
+        return '<li><a class="res" href="#' + n.slug + '"><div class="res-top">' + badge(n) + '<span class="code">' + esc(n.code) + '</span><span class="code">p. ' + n.p + "</span>" + (h.notes ? '<span class="pill' + (n.exam === "ADVANCED" ? " adv" : "") + '">In study guide</span>' : "") + "</div>" +
           '<div class="res-text">' + fmt(n.t, re) + "</div>" + (h.notes ? '<div class="res-snip">' + hl(snip(n, terms), reN) + "</div>" : "") +
           (chain.length > 1 ? '<div class="res-path">' + chain.slice(1).map(function (a) { return hl(label(a), re); }).join(" / ") + "</div>" : "") + "</a></li>";
       }).join("") + "</ol>" +
