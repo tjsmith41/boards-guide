@@ -516,7 +516,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <p class="dlg-sub" id="fb-sub">Goes privately to the attending who runs this guide.</p>
+    <p class="dlg-sub" id="fb-sub">Goes privately to the maker of this guide.</p>
     <fieldset class="fb-about">
       <legend>About</legend>
       <label id="fb-topic-row"><input type="radio" name="fb-about" id="fb-about-topic" value="topic" checked><span id="fb-topic-label">This topic</span></label>
@@ -642,7 +642,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
       '<div class="sn-bar" role="img" aria-label="' + pct + '% of topics written"><span style="width:' + pct + '%"></span></div>' +
       '<p class="panel-note">' + (draft ? "Drafts for review. Residents see study guide pages only after they’re approved." :
         "Reading pages are being written for every topic, a section at a time. In the lists below, a <span class=\"pill\">Study guide</span> tag marks a topic that has one." +
-        (FB.mode ? " If something looks wrong, tell your attending with the Feedback button." : "")) + "</p>" +
+        (FB.mode ? " If something looks wrong, tell the maker with the Feedback button." : "")) + "</p>" +
       (newest ? '<p class="sn-new">Latest added: <a href="#' + newest.slug + '"><span class="mk">' + esc(newest.code) + "</span> " + esc(short(newest.t, 70)) + "</a></p>" : "") +
       "</section>";
   }
@@ -798,12 +798,12 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
       '<div class="home-intro"><p class="kicker">Study guide for residents</p>' +
       "<h1>Every topic in the ABA content outline, organized for study</h1>" +
       '<p class="lead">All ' + TOTAL.toLocaleString() + ' items from the Initial Certification Content Outline, covering the BASIC and ADVANCED exams. Browse a section below or in the menu, or search for any term<span class="kbd-hint"> (press <kbd>/</kbd>)</span>.</p>' +
-      '<p class="tip">Every topic has a My notes box for your own notes, saved privately in your browser' + (FB.mode ? ", and the Feedback button at the top sends your attending a message." : ".") + "</p></div>" +
+      '<p class="tip">Every topic has a My notes box for your own notes, saved privately in your browser' + (FB.mode ? ", and the Feedback button at the top sends the maker a message." : ".") + "</p></div>" +
       snPanel() + shown.map(function (p) { return partPanel(p, true); }).join("") +
       (filter !== "all" ? '<p class="filter-note">Showing ' + filter + ' only. <button class="linkish" type="button" data-filter="all">Show both exams</button></p>' : "") +
       '<section class="about"><h2>About this guide</h2>' +
       "<p>An unofficial study aid. Topic wording is quoted from the American Board of Anesthesiology’s Initial Certification Content Outline (53-page PDF, February 2026). Check the ABA’s website for the current version before relying on it.</p>" +
-      "<p>Your notes are saved only in your own browser. Nobody else can see them, including your attending." + (FB.mode ? " Feedback goes only to your attending." : "") + "</p>" +
+      "<p>Your notes are saved only in your own browser. Nobody else can see them, including the maker of this guide." + (FB.mode ? " Feedback goes only to the maker." : "") + "</p>" +
       "<p>Three fixes to the PDF’s own typos and layout slips:</p><ul>" +
       "<li>II.A.3 Interpreting Data is in the outline but missing from the PDF’s table of contents. It is included here.</li>" +
       "<li>The margin label on PDF page 15 reads I.B.7.2.c. The item is I.B.7.c.</li>" +
@@ -1094,7 +1094,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
     cur.slug = null;
     var list = sortedNotes(), last = fmtDate(getItem("abn-last-backup"));
     main.innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#home">Home</a></nav><h1>My notes</h1>' +
-      '<p class="lead">Your notes from every topic, in outline order. They’re saved only in this browser on this device, and nobody else can see them, including your attending.</p>' +
+      '<p class="lead">Your notes from every topic, in outline order. They’re saved only in this browser on this device, and nobody else can see them, including the maker of this guide.</p>' +
       '<ul class="facts"><li><b>' + list.length + "</b> " + (list.length === 1 ? "topic" : "topics") + " with notes</li>" +
       (list.length ? "<li>" + (last ? "Last backup " + esc(last) : "Not backed up yet") + "</li>" : "") + "</ul>" +
       '<div class="notes-tools">' +
@@ -1219,8 +1219,8 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
     document.getElementById("fb-name-row").hidden = !named;
     if (named && !fbName.value) fbName.value = getItem("abn-fb-name") || "";
     document.getElementById("fb-sub").textContent = FB.mode === "email" ?
-      "This opens your email app with a message to your attending (" + FB.email + ")." :
-      named ? "Goes privately to your attending. It’s anonymous unless you add your name." : "Goes privately to your attending, without your name.";
+      "This opens your email app with a message to the maker of this guide (" + FB.email + ")." :
+      named ? "Goes privately to the maker of this guide. It’s anonymous unless you add your name." : "Goes privately to the maker of this guide, without your name.";
     fbSend.textContent = FB.mode === "email" ? "Open email" : "Send";
     fbStatus.textContent = ""; fbStatus.className = ""; fbSend.disabled = false;
     if (typeof fbDlg.showModal === "function") { if (!fbDlg.open) fbDlg.showModal(); } else fbDlg.setAttribute("open", "");
