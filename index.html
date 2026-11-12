@@ -469,7 +469,7 @@ mark { background: var(--air); color: var(--air-ink); border-radius: 3px; paddin
 .rc-chip.more { font-family: var(--font-body); }
 .rot-home .panel-note { margin-top: -4px; }
 
-/* ---------- review: the Review page, the Under review box on topic pages, the answer buttons ---------- */
+/* ---------- review: the Review page, the Under review box on topic pages, the Send info button ---------- */
 .b-rv { color: var(--rv); background: var(--rv-tint); }
 .rv-box { margin-top: 22px; border: 1px solid var(--rv-line); border-radius: var(--radius); background: var(--surface); }
 .rv-box > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 11px 14px; cursor: pointer; list-style: none; border-radius: var(--radius); }
@@ -521,25 +521,9 @@ span.rv-code { color: var(--muted); }
 .rv-sec > h2 .n { font: 400 var(--fs-sm)/1 var(--font-body); color: var(--muted); font-variant-numeric: tabular-nums; }
 .rv-sub { margin: 0; font-size: var(--fs-sm); color: var(--muted); max-width: 65ch; }
 .rv-grp { margin: 20px 0 0; font: 700 var(--fs-xs)/1.4 var(--font-body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-.rv-ans { margin-top: 18px; padding: 11px 14px; border: 1.5px solid var(--rv-line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm); }
-@media (min-width: 901px) { .rv-ans { position: sticky; top: calc(var(--hdr) + 10px); z-index: 5; } }
-.rv-mk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.rv-mk-n { flex: 1 1 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
-.btn-rv { background: var(--rv); border-color: var(--rv); color: var(--on-accent); }
-.btn-rv:hover { background: var(--rv); filter: brightness(1.08); }
-.rv-mk-un { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); cursor: pointer; }
-.rv-mk-un input, .rv-pick input { accent-color: var(--rv); }
-.rv-mk-help { margin: 6px 0 0; font-size: var(--fs-xs); color: var(--muted); }
-.rv-mk-st { margin: 6px 0 0; font-size: var(--fs-sm); font-weight: 700; color: var(--rv); }
-.rv-mk-st:empty { display: none; }
-.rv-copy { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--bg); color: var(--ink); font: 400 var(--fs-xs)/1.45 var(--font-mono); }
-.rv-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
-.rv-pick .lbl { margin-right: 2px; font: 700 var(--fs-xs)/1.4 var(--font-body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--rv); }
 .rv-opt { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
 .rv-opt:hover { background: var(--sunken); }
 .rv-opt[aria-pressed="true"] { background: var(--rv); border-color: var(--rv); color: var(--on-accent); }
-.rv-note { flex: 1 1 100%; box-sizing: border-box; min-height: 2.6em; resize: vertical; border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 10px; background: var(--bg); color: var(--ink); font: inherit; font-size: var(--fs-ui); line-height: 1.45; }
-.rv-note:focus { outline: 2px solid var(--rv); outline-offset: 1px; background: var(--surface); }
 .rv-home .panel-note { margin-top: -4px; }
 .rv-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 12px 0 0; font-size: var(--fs-sm); color: var(--muted); }
 .rv-send { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rv-line); background: var(--surface); color: var(--rv); border-radius: 999px; padding: 6px 13px; font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
@@ -893,28 +877,6 @@ span.rv-code { color: var(--muted); }
     r.pages.forEach(function (p) { if (!rvOnPage.has(p)) rvOnPage.set(p, []); rvOnPage.get(p).push(r); });
     RV.push(r); rvById.set(r.id, r);
   });
-  /* answer mode: buttons on each item for settling it (open the guide once with ?answers), kept in this browser and copied out as text */
-  var ANSWERING = getItem("abn-answers") === "1";
-  (function () {
-    var m = /(?:^|&)answers(?:=([^&]*))?(?:&|$)/.exec(location.search.slice(1));
-    if (!m) return;
-    ANSWERING = !/^(off|0|no)$/i.test(m[1] || "");
-    setItem("abn-answers", ANSWERING ? "1" : "");
-    var rest = location.search.slice(1).split("&").filter(function (x) { return x && !/^answers(=|$)/.test(x); }).join("&");
-    try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch (e) {}
-  })();
-  var PKEY = "abn-review-picks-v1";
-  function readPicks() {
-    try { var o = JSON.parse(getItem(PKEY) || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; }
-  }
-  var rvPicks = readPicks(), rvNoteT = null;
-  function pickOf(id) { var p = rvPicks[id]; return p && (p.c || p.n) ? p : null; }
-  function savePick(id, c, n) {
-    var all = readPicks();   /* read again first, so picks made in another open tab are kept */
-    if (c || (n && n.trim())) all[id] = { c: c || "", n: n || "", u: nowIso() }; else delete all[id];
-    rvPicks = all;
-    return setItem(PKEY, JSON.stringify(all));
-  }
   function under(p, n) { for (var x = p.parent; x; x = x.parent) if (x === n) return true; return false; }
   function rvIn(r, n) { return r.pages.some(function (p) { return p === n || under(p, n); }); }
   function rvVis(r) { return filter === "all" || !r.exam || r.exam === filter; }
@@ -942,12 +904,6 @@ span.rv-code { color: var(--muted); }
     document.querySelectorAll('[data-rv-ask="' + r.id + '"]').forEach(function (e) { e.innerHTML = rvAskInner(r); });
   }
   function pointText(r) { return "Review " + r.id + (r.d.r ? " (" + r.d.r + ")" : "") + " \u00b7 " + (r.nodes.length ? r.nodes[0].code + " " + short(r.nodes[0].t, 60) : "whole guide"); }
-  function rvPickRow(r) {
-    var p = pickOf(r.id) || {}, opts = r.k === "unrev" ? [["use", "Review it"], ["keep", "Leave it"], ["other", "Other"]] : [["use", "Use the suggestion"], ["keep", "Keep the note as is"], ["other", "Other"]];
-    return '<div class="rv-pick" data-rv="' + esc(r.id) + '"><span class="lbl">Your call</span>' + opts.map(function (o) {
-      return '<button type="button" class="rv-opt" data-c="' + o[0] + '" aria-pressed="' + (p.c === o[0]) + '">' + o[1] + "</button>";
-    }).join("") + '<textarea class="rv-note" rows="1" maxlength="1000" placeholder="Note for the fix (optional)" aria-label="Note on ' + esc(r.id) + '"' + (p.c || p.n ? "" : " hidden") + ">" + esc(p.n || "") + "</textarea></div>";
-  }
   /* one review point; d.q, d.s, d.f, d.x and d.e are HTML that build_site.py rendered from the review file */
   function rvCard(r, here) {
     var d = r.d, K = RVK[r.k];
@@ -963,7 +919,7 @@ span.rv-code { color: var(--muted); }
       '<p class="rv-f">' + (d.v && r.k === "err" ? "<strong>" + esc(d.v.charAt(0).toUpperCase() + d.v.slice(1)) + ".</strong> " : "") + (d.f || "") + "</p>" +
         (d.x ? '<p class="rv-s">' + lbl("Suggested change") + d.x + "</p>" : "") +
         (d.e ? '<details class="rv-det"><summary>Sources</summary><p class="rv-src">' + d.e + "</p></details>" : ""));
-    return '<article class="rv-card k-' + r.k + '" id="rv-' + esc(r.id) + '">' + top + body + (ANSWERING ? rvPickRow(r) : rvAsk(r)) + "</article>";
+    return '<article class="rv-card k-' + r.k + '" id="rv-' + esc(r.id) + '">' + top + body + rvAsk(r) + "</article>";
   }
   /* the box at the top of a topic page: this page's points, collapsed, plus a count of the points in the topics under it */
   function rvBox(n) {
@@ -978,7 +934,7 @@ span.rv-code { color: var(--muted); }
       '<span class="rv-sum"><b>' + plural(own.length, "point", "points") + "</b> from the review: " + rvKinds(own).join(", ") + "</span>" +
       '<span class="rv-tog"><span class="when-closed">Show</span><span class="when-open">Hide</span>' + chevDown + "</span></summary>" +
       '<div class="rv-body">' + own.map(function (r) { return rvCard(r, n); }).join("") +
-      '<p class="rv-foot">' + (more ? more + " · " : "") + (ANSWERING ? "Your picks are saved in this browser. Copy them on the " : "") + '<a href="#review">' + (ANSWERING ? "Review page" : "All review points") + "</a>" + (ANSWERING ? "." : "") + "</p></div></details>";
+      '<p class="rv-foot">' + (more ? more + " · " : "") + '<a href="#review">All review points</a></p></div></details>';
   }
   function rvPanel() {
     var vis = RV.filter(rvVis);
@@ -988,7 +944,7 @@ span.rv-code { color: var(--muted); }
       '<p class="panel-note">Every note was checked against Miller’s Anesthesia (10th edition) and current guidelines' + (when ? " in " + esc(when) : "") + ". What’s left: " + rvKinds(vis).join(", ") +
       '. A topic with open points shows an Under review box at the top. ' + (FB.mode ? "Know something about one? Send info from any point. " : "") + '<a href="#review">See them all</a>.</p></section>';
   }
-  var rvKind = "all", rvAll = {}, rvUnans = false, rvGo = null;
+  var rvKind = "all", rvAll = {}, rvGo = null;
   function rvSection(k, items, scope) {
     var cap = rvKind === "all" && !rvAll[k] && items.length > 6 ? 5 : items.length, last = null;
     return '<section class="rv-sec" aria-labelledby="rv-h-' + k + '"><h2 id="rv-h-' + k + '">' + RVK[k].many + '<span class="n">' + items.length + "</span></h2>" +
@@ -1000,17 +956,8 @@ span.rv-code { color: var(--muted); }
       }).join("") + "</div>" +
       (cap < items.length ? '<button class="more-btn" type="button" data-rv-more="' + k + '">Show all ' + items.length + "</button>" : "") + "</section>";
   }
-  function rvAnswered() { return RV.filter(function (r) { return pickOf(r.id); }); }
-  function rvAnsBar() {
-    return '<div class="rv-ans" id="rv-ans"><div class="rv-mk-row"><span class="badge b-rv">Answer mode</span><span class="rv-mk-n" id="rv-mk-n">' + rvAnswered().length + " of " + RV.length + " answered</span>" +
-      '<label class="rv-mk-un"><input type="checkbox" data-rv-unans' + (rvUnans ? " checked" : "") + "> Unanswered only</label>" +
-      '<button type="button" class="btn btn-rv" data-rv-copy>Copy answers</button></div>' +
-      '<p class="rv-mk-help">Your picks stay in this browser until you copy them. Paste them in the project chat to apply them. <button class="linkish" type="button" data-rv-clear>Clear picks</button> · <button class="linkish" type="button" data-rv-off>Turn off answer mode</button></p>' +
-      '<p class="rv-mk-st" id="rv-mk-st" role="status"></p></div>';
-  }
   function renderReview(scope) {
-    var base = RV.filter(function (r) { return rvVis(r) && (!scope || rvIn(r, scope)); });
-    var list = ANSWERING && rvUnans ? base.filter(function (r) { return !pickOf(r.id); }) : base;   /* a note alone counts as an answer, as in the count and the copy */
+    var list = RV.filter(function (r) { return rvVis(r) && (!scope || rvIn(r, scope)); });
     var c = rvCounts(list), kinds = RVORDER.filter(function (k) { return c[k]; });
     if (rvKind !== "all" && !c[rvKind]) rvKind = "all";
     var when = monthYear(RVDATA.asof), name = scope ? (scope.depth ? scope.code + " " + short(scope.t, 60) : scope.t) : "";
@@ -1020,15 +967,14 @@ span.rv-code { color: var(--muted); }
       (scope ? '<p class="lead">The open review points for this topic and the topics under it. <a href="#' + scope.slug + '">Back to the topic</a> · <a href="#review">All review points</a></p>' :
         '<p class="lead">Every note in this guide was checked against Miller’s Anesthesia (10th edition) and current guidelines' + (when ? " in " + esc(when) : "") +
         ". These points are still open. Each one leaves the list once its note is fixed or confirmed as it is.</p>") +
-      (FB.mode && !ANSWERING ? '<p class="rv-invite"><strong>Know an answer, or have a source?</strong> Use Send info on any point. It’s sent privately for review.</p>' : "") +
+      (FB.mode ? '<p class="rv-invite"><strong>Know an answer, or have a source?</strong> Use Send info on any point. It’s sent privately for review.</p>' : "") +
       '<ul class="facts"><li><b>' + list.length + "</b> open " + (list.length === 1 ? "point" : "points") + "</li>" + kinds.map(function (k) { return "<li>" + RVK[k].n(c[k]).replace(/^(\d+)/, "<b>$1</b>") + "</li>"; }).join("") + "</ul>" +
-      (ANSWERING ? rvAnsBar() : "") +
       (filter !== "all" ? '<p class="filter-note">Showing ' + filter + ' only. <button class="linkish" type="button" data-filter="all">Show both exams</button></p>' : "") +
       (kinds.length > 1 ? '<div class="rv-chips" role="group" aria-label="Show">' + ["all"].concat(kinds).map(function (k) {
         return '<button type="button" class="rv-chip" data-rv-kind="' + k + '" aria-pressed="' + (rvKind === k) + '">' + (k === "all" ? "All" : RVK[k].many) + '<span class="n">' + (k === "all" ? list.length : c[k]) + "</span></button>";
       }).join("") + "</div>" : "") +
       (list.length ? (rvKind === "all" ? kinds : [rvKind]).map(function (k) { return rvSection(k, list.filter(function (r) { return r.k === k; }), scope); }).join("") :
-        '<p class="empty-note">' + (base.length ? "You’ve answered every point here." : "Nothing here is under review.") + "</p>");
+        '<p class="empty-note">Nothing here is under review.</p>');
   }
   function rvFlash(el) {
     var det = el.closest("details");
@@ -1042,38 +988,6 @@ span.rv-code { color: var(--muted); }
     var el = document.getElementById("rv-" + rvGo);
     rvGo = null;
     if (el) requestAnimationFrame(function () { rvFlash(el); });
-  }
-  function rvPaintCount() { var e = document.getElementById("rv-mk-n"); if (e) e.textContent = rvAnswered().length + " of " + RV.length + " answered"; }
-  function rvAnswers() {
-    var L = { use: "use the suggestion", keep: "keep the note as is", other: "other" }, LU = { use: "review it", keep: "leave it", other: "other" };
-    var picked = rvAnswered(), lines = ["Review answers from the boards guide, " + longDate(localDay()) + " (" + plural(picked.length, "point", "points") + ")", ""];
-    picked.forEach(function (r) {
-      var p = pickOf(r.id), note = String(p.n || "").trim().replace(/\s+/g, " ");
-      lines.push(r.id + (r.d.r ? " (" + r.d.r + ")" : "") + " · " + (r.nodes.length ? r.nodes[0].code : "whole guide") + " · " + ((r.k === "unrev" ? LU : L)[p.c] || "note") + (note ? ": " + note : ""));
-    });
-    return lines.join(NL);
-  }
-  function legacyCopy(t) {
-    var ta = document.createElement("textarea"), ok = false;
-    ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "-1000px";
-    document.body.appendChild(ta); ta.select();
-    try { ok = document.execCommand("copy"); } catch (e) {}
-    ta.remove();
-    return ok;
-  }
-  function rvCopy() {
-    var st = document.getElementById("rv-mk-st"), n = rvAnswered().length, text = rvAnswers();
-    if (!st) return;
-    if (!n) { st.textContent = "Nothing to copy yet. Pick an answer on a point first."; return; }
-    var done = function (ok) {
-      if (ok) { st.textContent = "Copied " + plural(n, "answer", "answers") + ". Paste them in the project chat."; return; }
-      st.innerHTML = 'Couldn’t copy on its own. Select the text below and copy it.<textarea class="rv-copy" readonly rows="6" aria-label="Your answers">' + esc(text) + "</textarea>";
-      var ta = st.querySelector("textarea"); ta.focus(); ta.select();
-    };
-    try {
-      if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(legacyCopy(text)); }); return; }
-    } catch (e) {}
-    done(legacyCopy(text));
   }
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -1802,29 +1716,13 @@ span.rv-code { color: var(--muted); }
   });
   updateNoteDots();
 
-  /* review: kind chips, show all, the answer buttons and notes, copy, and jumps to a point */
+  /* review: kind chips, show all, Send info, and jumps to a point */
   document.getElementById("rv-btn").hidden = !RV.length;
   main.addEventListener("click", function (e) {
-    var o = e.target.closest(".rv-opt");
-    if (o) {
-      var box = o.closest(".rv-pick"), id = box.dataset.rv, p = pickOf(id) || {}, c = o.dataset.c === p.c ? "" : o.dataset.c, ta = box.querySelector(".rv-note");
-      savePick(id, c, ta.value);
-      box.querySelectorAll(".rv-opt").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.c === c)); });
-      ta.hidden = !c && !ta.value.trim();
-      if (c === "other") ta.focus();
-      rvPaintCount();
-      return;
-    }
     var k = e.target.closest("[data-rv-kind]");
     if (k) { rvKind = k.dataset.rvKind; route(true); return; }
     var m = e.target.closest("[data-rv-more]");
     if (m) { rvAll[m.dataset.rvMore] = true; route(true); return; }
-    if (e.target.closest("[data-rv-copy]")) { rvCopy(); return; }
-    if (e.target.closest("[data-rv-clear]")) {
-      if (window.confirm("Clear all your review picks in this browser?")) { setItem(PKEY, "{}"); rvPicks = {}; route(true); }
-      return;
-    }
-    if (e.target.closest("[data-rv-off]")) { ANSWERING = false; setItem("abn-answers", ""); route(true); return; }
     var sd = e.target.closest("[data-rv-send]");
     if (sd) { var sr = rvById.get(sd.getAttribute("data-rv-send")); if (sr) openFeedback(sr); return; }
     var g = e.target.closest("[data-rv-go]");
@@ -1836,15 +1734,7 @@ span.rv-code { color: var(--muted); }
       if (location.hash !== "#review") location.hash = "#review"; else route(true);
     }
   });
-  main.addEventListener("change", function (e) { if (e.target.matches("[data-rv-unans]")) { rvUnans = e.target.checked; route(true); } });
-  main.addEventListener("input", function (e) {
-    if (!e.target.matches(".rv-note")) return;
-    var t = e.target, id = t.closest(".rv-pick").dataset.rv;
-    clearTimeout(rvNoteT);
-    rvNoteT = setTimeout(function () { var p = pickOf(id) || {}; savePick(id, p.c, t.value); rvPaintCount(); }, 400);
-  });
   main.addEventListener("toggle", function (e) { if (e.target.id === "rv-box") setItem("abn-rv-open", e.target.open ? "1" : ""); }, true);
-  window.addEventListener("storage", function (e) { if (e.key === PKEY) rvPicks = readPicks(); });
 
   /* ---------- feedback: sent to a Google Form from inside the page, or written in the resident's email app ---------- */
   var FB = (function () {
