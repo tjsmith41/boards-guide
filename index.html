@@ -1218,12 +1218,12 @@ span.rv-code { color: var(--muted); }
         return '<div class="sec"><h3><a href="#' + s.slug + '">' + esc(s.m + " " + s.t) + "</a></h3>" + linkList(s.kids, true) + "</div>";
       }).join("") + "</div></section>";
   }
-  /* under the home tip: checking the guide depends on everyone who reads it. It asks readers to send what they find,
-     so it shows only when feedback is on, and it points to the Review page only while points are open */
+  /* under the home tip: the readers do the checking. It asks them to send corrections, so it shows only when
+     feedback is on, and it points to the Review page only while points are open */
   function crowdNote() {
     if (!FB.mode) return "";
-    return '<p class="tip crowd"><strong>Verifying this guide depends on the whole crowd: everyone who reads it.</strong> Report anything that looks wrong, out of date or missing' +
-      (RV.some(rvVis) ? ', and send what you know about the open points on the <a href="#review">Review page</a>.' : ".") + "</p>";
+    return '<p class="tip crowd"><strong>No single person has checked all of this. The crowd does the checking.</strong> Every correction you send makes the guide more reliable for the next reader. ' +
+      (RV.some(rvVis) ? 'Use Feedback, or Send info on the <a href="#review">Review page</a>.' : "Use the Feedback button.") + "</p>";
   }
   function renderHome() {
     setActive(null);
